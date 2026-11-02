@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учебный помощник</title>
+    <style>
+        /* ===== ОБЩИЕ СТИЛИ ===== */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        /* ===== ВКЛАДКИ ===== */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #ecf0f1;
+            color: #555;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            background: #d5dbdb;
+        }
+        .tab-btn.active {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .tab-btn.active[data-tab="shpargalka"] { background: #27ae60; }
+        .tab-btn.active[data-tab="math"] { background: #764ba2; }
+        .tab-btn.active[data-tab="russian"] { background: #f5576c; }
+
+        /* ===== КОНТЕНТ ВКЛАДОК ===== */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== ОБЩИЕ СТИЛИ СЕКЦИЙ ===== */
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #555;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: #219150;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #3498db;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .btn-copy {
+            background: #3498db;
+            color: white;
+            margin-right: 10px;
+        }
+        .btn-copy:hover { background: #2980b9; }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-delete:hover { background: #c0392b; }
+        .error-msg {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: none;
+            text-align: center;
+        }
+        .success-msg {
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: none;
+            text-align: center;
+        }
+
+        /* ===== ШПАРГАЛКА ===== */
+        #shpargalka h2 { color: #27ae60; }
+        .formula-card {
+            background: #f9f9f9;
+            border-left: 5px solid #27ae60;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .formula-subject {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .formula-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .formula-text {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 1.1em;
+            white-space: pre-wrap;
+        }
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 20px;
+        }
+
+        /* ===== МАТЕМАТИКА ===== */
+        #math h2 { color: #764ba2; }
+        .math-problem {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        #math input[type="number"] {
+            font-size: 1.5em;
+            text-align: center;
+            padding: 15px;
+        }
+        .math-stats, .rus-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .math-stats .stat-value { color: #764ba2; }
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* ===== РУССКИЙ ЯЗЫК ===== */
+        #russian h2 { color: #f5576c; }
+        .word-display {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+        }
+        .hint {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 15px;
+            font-size: 1em;
+            padding: 10px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+        #russian input[type="text"] {
+            font-size: 1.5em;
+            text-align: center;
+            padding: 15px;
+            text-transform: lowercase;
+        }
+        .rus-stats .stat-value { color: #f5576c; }
+
+        /* ===== ОБЩАЯ ОБРАТНАЯ СВЯЗЬ ===== */
+        .feedback {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 15px;
+            display: none;
+        }
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        .explanation {
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-weight: normal;
+            color: #555;
+        }
+
+        /* ===== АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОНА ===== */
+        @media (max-width: 600px) {
+            .tab-btn {
+                font-size: 0.95em;
+                padding: 12px 10px;
+            }
+            .math-problem, .word-display {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎓 Учебный помощник</h1>
+
+    <!-- ВКЛАДКИ -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="shpargalka" onclick="switchTab('shpargalka')">📚 Шпаргалка</button>
+        <button class="tab-btn" data-tab="math" onclick="switchTab('math')">🧮 Математика</button>
+        <button class="tab-btn" data-tab="russian" onclick="switchTab('russian')">✍️ Русский язык</button>
+    </div>
+
+    <!-- ===== ВКЛАДКА 1: ШПАРГАЛКА ===== -->
+    <div id="shpargalka" class="tab-content active">
+        <div class="section">
+            <h2>➕ Добавить новую запись</h2>
+            <div id="addError" class="error-msg">Пожалуйста, заполни все три поля!</div>
+            <div id="addSuccess" class="success-msg">Запись успешно добавлена!</div>
+            
+            <label for="subject">Предмет:</label>
+            <input type="text" id="subject" placeholder="Например: Алгебра, Физика">
+            
+            <label for="title">Название или тема:</label>
+            <input type="text" id="title" placeholder="Например: Формула дискриминанта">
+            
+            <label for="content">Текст формулы или ответа:</label>
+            <textarea id="content" rows="3" placeholder="Например: D = b² - 4ac"></textarea>
+            
+            <button class="btn-primary" onclick="addFormula()">Сохранить в шпаргалку</button>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Поиск по шпаргалке</h2>
+            <label for="search">Введи предмет или ключевое слово:</label>
+            <input type="text" id="search" placeholder="Например: физика или сила..." oninput="searchFormulas()">
+        </div>
+
+        <div class="section">
+            <h2>📋 Мои записи</h2>
+            <div id="formulasList"></div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА 2: МАТЕМАТИКА ===== -->
+    <div id="math" class="tab-content">
+        <div class="section">
+            <h2>⚙️ Настройки</h2>
+            <label for="difficulty">Уровень сложности:</label>
+            <select id="difficulty">
+                <option value="easy">Лёгкий (числа до 20)</option>
+                <option value="medium" selected>Средний (числа до 100)</option>
+                <option value="hard">Сложный (числа до 1000)</option>
+            </select>
+
+            <label for="operation">Тип примеров:</label>
+            <select id="operation">
+                <option value="add">Сложение (+)</option>
+                <option value="subtract">Вычитание (−)</option>
+                <option value="multiply">Умножение (×)</option>
+                <option value="mixed" selected>Смешанные (+, −, ×)</option>
+            </select>
+
+            <button class="btn-secondary" onclick="generateMathProblem()">🎲 Начать тренировку</button>
+        </div>
+
+        <div class="section" id="mathProblemSection" style="display: none;">
+            <h2>📝 Реши пример</h2>
+            <div class="math-problem" id="mathProblemText">5 + 3 = ?</div>
+            <div id="mathErrorMsg" class="error-msg">Введи число!</div>
+            
+            <input type="number" id="mathAnswer" placeholder="Твой ответ" onkeypress="if(event.key==='Enter') checkMathAnswer()">
+            
+            <button class="btn-primary" onclick="checkMathAnswer()">✓ Проверить</button>
+            
+            <div id="mathFeedback" class="feedback"></div>
+            
+            <button class="btn-secondary" id="mathNextBtn" onclick="generateMathProblem()" style="display: none;">➡️ Следующий пример</button>
+        </div>
+
+        <div class="section">
+            <h2>📊 Твоя статистика</h2>
+            <div class="math-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="mathTotalSolved">0</div>
+                    <div class="stat-label">Решено</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="mathCorrectCount">0</div>
+                    <div class="stat-label">Правильно</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="mathAccuracy">0%</div>
+                    <div class="stat-label">Точность</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА 3: РУССКИЙ ЯЗЫК ===== -->
+    <div id="russian" class="tab-content">
+        <div class="section">
+            <h2>⚙️ Выбери правило</h2>
+            <label for="rule">Какое правило тренируем:</label>
+            <select id="rule" onchange="updateRusPlaceholder()">
+                <option value="vowel">Безударная проверяемая гласная в корне</option>
+                <option value="consonant">Парная согласная в корне</option>
+                <option value="dictionary">Словарные слова (непроверяемые)</option>
+                <option value="prefix">Приставки ПРЕ- / ПРИ-</option>
+                <option value="all" selected>Все правила вперемешку</option>
+            </select>
+
+            <button class="btn-secondary" onclick="generateRusWord()">🎲 Начать тренировку</button>
+        </div>
+
+        <div class="section" id="rusWordSection" style="display: none;">
+            <h2>📝 Вставь пропущенное</h2>
+            <div class="word-display" id="rusWordText">к_рова</div>
+            <div class="hint" id="rusHintText"></div>
+            <div id="rusErrorMsg" class="error-msg">Введи одну букву русского алфавита!</div>
+            
+            <input type="text" id="rusLetter" placeholder="Одна буква" onkeypress="if(event.key==='Enter') checkRusLetter()">
+            
+            <button class="btn-primary" onclick="checkRusLetter()">✓ Проверить</button>
+            
+            <div id="rusFeedback" class="feedback"></div>
+            
+            <button class="btn-secondary" id="rusNextBtn" onclick="generateRusWord()" style="display: none;">➡️ Следующее слово</button>
+        </div>
+
+        <div class="section">
+            <h2>📊 Твоя статистика</h2>
+            <div class="rus-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="rusTotalSolved">0</div>
+                    <div class="stat-label">Решено</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="rusCorrectCount">0</div>
+                    <div class="stat-label">Правильно</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="rusAccuracy">0%</div>
+                    <div class="stat-label">Точность</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
+        function switchTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Показываем нужную
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-btn[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // ===== ШПАРГАЛКА =====
+        const STORAGE_KEY = 'my_shpargalka_data';
+
+        function getFormulas() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveFormulas(formulas) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formulas));
+        }
+
+        function addFormula() {
+            const subject = document.getElementById('subject').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const errorDiv = document.getElementById('addError');
+            const successDiv = document.getElementById('addSuccess');
+
+            if (!subject || !title || !content) {
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            
+            const newFormula = {
+                id: Date.now(),
+                subject: subject,
+                title: title,
+                content: content
+            };
+
+            const formulas = getFormulas();
+            formulas.push(newFormula);
+            saveFormulas(formulas);
+
+            document.getElementById('subject').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('content').value = '';
+            
+            successDiv.style.display = 'block';
+            setTimeout(() => { successDiv.style.display = 'none'; }, 3000);
+
+            searchFormulas();
+        }
+
+        function searchFormulas() {
+            const query = document.getElementById('search').value.toLowerCase().trim();
+            const formulas = getFormulas();
+            const listContainer = document.getElementById('formulasList');
+            listContainer.innerHTML = '';
+
+            const filtered = formulas.filter(f => 
+                f.subject.toLowerCase().includes(query) || 
+                f.title.toLowerCase().includes(query) || 
+                f.content.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">Ничего не найдено. Добавь новую запись или измени запрос.</div>';
+                return;
+            }
+
+            filtered.reverse().forEach(f => {
+                const card = document.createElement('div');
+                card.className = 'formula-card';
+                card.innerHTML = `
+                    <div class="formula-subject">${escapeHtml(f.subject)}</div>
+                    <div class="formula-title">${escapeHtml(f.title)}</div>
+                    <div class="formula-text">${escapeHtml(f.content)}</div>
+                    <div class="card-actions">
+                        <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(f.content).replace(/'/g, "\\'")}', this)">📋 Копировать</button>
+                        <button class="btn-delete" onclick="deleteFormula(${f.id})">🗑️ Удалить</button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function copyToClipboard(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.innerText;
+                btnElement.innerText = '✅ Скопировано!';
+                btnElement.style.backgroundColor = '#27ae60';
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.style.backgroundColor = '#3498db';
+                }, 2000);
+            }).catch(err => {
+                alert('Не удалось скопировать текст. Попробуй выделить его вручную.');
+            });
+        }
+
+        function deleteFormula(id) {
+            if (confirm('Точно удалить эту запись?')) {
+                let formulas = getFormulas();
+                formulas = formulas.filter(f => f.id !== id);
+                saveFormulas(formulas);
+                searchFormulas();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ===== МАТЕМАТИКА =====
+        let currentMathProblem = null;
+        let mathStats = { total: 0, correct: 0 };
+
+        function mathLoadStats() {
+            const saved = localStorage.getItem('math_trainer_stats');
+            if (saved) {
+                mathStats = JSON.parse(saved);
+                mathUpdateStatsDisplay();
+            }
+        }
+
+        function mathSaveStats() {
+            localStorage.setItem('math_trainer_stats', JSON.stringify(mathStats));
+        }
+
+        function getRandomNumber(max) {
+            return Math.floor(Math.random() * max) + 1;
+        }
+
+        function generateMathProblem() {
+            const difficulty = document.getElementById('difficulty').value;
+            const operation = document.getElementById('operation').value;
+            
+            let maxNum;
+            switch(difficulty) {
+                case 'easy': maxNum = 20; break;
+                case 'medium': maxNum = 100; break;
+                case 'hard': maxNum = 1000; break;
+            }
+
+            let num1 = getRandomNumber(maxNum);
+            let num2 = getRandomNumber(maxNum);
+            let op, answer;
+
+            if (operation === 'mixed') {
+                const ops = ['+', '−', '×'];
+                op = ops[Math.floor(Math.random() * ops.length)];
+            } else {
+                switch(operation) {
+                    case 'add': op = '+'; break;
+                    case 'subtract': op = '−'; break;
+                    case 'multiply': op = '×'; break;
+                }
+            }
+
+            switch(op) {
+                case '+': answer = num1 + num2; break;
+                case '−':
+                    if (num1 < num2) [num1, num2] = [num2, num1];
+                    answer = num1 - num2;
+                    break;
+                case '×': answer = num1 * num2; break;
+            }
+
+            currentMathProblem = {
+                text: `${num1} ${op} ${num2} = ?`,
+                answer: answer
+            };
+
+            document.getElementById('mathProblemText').textContent = currentMathProblem.text;
+            document.getElementById('mathProblemSection').style.display = 'block';
+            document.getElementById('mathAnswer').value = '';
+            document.getElementById('mathAnswer').focus();
+            document.getElementById('mathFeedback').style.display = 'none';
+            document.getElementById('mathNextBtn').style.display = 'none';
+            document.getElementById('mathErrorMsg').style.display = 'none';
+            document.getElementById('mathAnswer').disabled = false;
+        }
+
+        function checkMathAnswer() {
+            const userAnswer = document.getElementById('mathAnswer').value.trim();
+            const errorMsg = document.getElementById('mathErrorMsg');
+            const feedback = document.getElementById('mathFeedback');
+
+            if (!userAnswer) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+            const userNum = parseInt(userAnswer);
+            mathStats.total++;
+
+            if (userNum === currentMathProblem.answer) {
+                mathStats.correct++;
+                feedback.className = 'feedback correct';
+                feedback.textContent = '✅ Правильно! Молодец!';
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `❌ Неправильно. Правильный ответ: ${currentMathProblem.answer}`;
+            }
+
+            feedback.style.display = 'block';
+            document.getElementById('mathNextBtn').style.display = 'block';
+            document.getElementById('mathAnswer').disabled = true;
+            
+            mathSaveStats();
+            mathUpdateStatsDisplay();
+        }
+
+        function mathUpdateStatsDisplay() {
+            document.getElementById('mathTotalSolved').textContent = mathStats.total;
+            document.getElementById('mathCorrectCount').textContent = mathStats.correct;
+            const accuracy = mathStats.total > 0 ? Math.round((mathStats.correct / mathStats.total) * 100) : 0;
+            document.getElementById('mathAccuracy').textContent = accuracy + '%';
+        }
+
+        // ===== РУССКИЙ ЯЗЫК =====
+        const rusWords = {
+            vowel: [
+                { display: 'к_рова', answer: 'о', full: 'кровь', hint: 'Подсказка: однокоренное слово — то, что течёт у человека в жилах' },
+                { display: 'л_сной', answer: 'е', full: 'лесной', hint: 'Подсказка: однокоренное слово — там, где растут деревья' },
+                { display: 'в_да', answer: 'о', full: 'вода', hint: 'Подсказка: однокоренное слово — plural (множественное число)' },
+                { display: 'тр_ва', answer: 'а', full: 'трава', hint: 'Подсказка: однокоренное слово — то, что растёт на лугу (мн. ч.)' },
+                { display: 'ст_на', answer: 'е', full: 'стена', hint: 'Подсказка: однокоренное слово — plural' },
+                { display: 'гр_бы', answer: 'и', full: 'грибы', hint: 'Подсказка: однокоренное слово — то, что собирают в лесу (ед. ч.)' },
+                { display: 'з_ма', answer: 'и', full: 'зима', hint: 'Подсказка: однокоренное слово — когда холодно и идёт снег (прил.)' },
+                { display: 'н_чи', answer: 'о', full: 'ночи', hint: 'Подсказка: однокоренное слово — когда темно и пора спать (ед. ч.)' },
+                { display: 'д_жди', answer: 'о', full: 'дожди', hint: 'Подсказка: однокоренное слово — когда с неба капает (ед. ч.)' },
+                { display: 'х_лодный', answer: 'о', full: 'холодный', hint: 'Подсказка: однокоренное слово — когда морозно (существительное)' }
+            ],
+            consonant: [
+                { display: 'ду_', answer: 'б', full: 'дуб', hint: 'Подсказка: однокоренное слово — plural (мн. ч.)' },
+                { display: 'ло_ка', answer: 'д', full: 'лодка', hint: 'Подсказка: на ней плавают по реке. Проверь plural' },
+                { display: 'гла_', answer: 'з', full: 'глаз', hint: 'Подсказка: однокоренное слово — plural' },
+                { display: 'са_', answer: 'д', full: 'сад', hint: 'Подсказка: однокоренное слово — plural, где растут яблони' },
+                { display: 'но_', answer: 'ж', full: 'нож', hint: 'Подсказка: однокоренное слово — plural, чем режут' },
+                { display: 'зу_', answer: 'б', full: 'зуб', hint: 'Подсказка: однокоренное слово — plural, что во рту' },
+                { display: 'пру_', answer: 'д', full: 'пруд', hint: 'Подсказка: однокоренное слово — plural, где плавают утки' },
+                { display: 'ска_ка', answer: 'з', full: 'сказка', hint: 'Подсказка: однокоренное слово — plural' },
+                { display: 'горо_', answer: 'х', full: 'горох', hint: 'Подсказка: однокоренное слово — то, что растёт в стручках' },
+                { display: 'сне_', answer: 'г', full: 'снег', hint: 'Подсказка: однокоренное слово — plural, что падает зимой' }
+            ],
+            dictionary: [
+                { display: 'к_рова', answer: 'о', full: 'корова', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'м_локо', answer: 'о', full: 'молоко', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'с_бака', answer: 'о', full: 'собака', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'к_ртина', answer: 'а', full: 'картина', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'в_рона', answer: 'о', full: 'ворона', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'п_нал', answer: 'е', full: 'пенал', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'т_традь', answer: 'е', full: 'тетрадь', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'уч_тель', answer: 'и', full: 'учитель', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'д_кабрь', answer: 'е', full: 'декабрь', hint: 'Словарное слово — написание нужно запомнить' },
+                { display: 'в_сёлый', answer: 'е', full: 'весёлый', hint: 'Словарное слово — написание нужно запомнить' }
+            ],
+            prefix: [
+                { display: '_ехать', answer: 'при', full: 'приехать', hint: 'Значение: прибытие, приближение' },
+                { display: '_шить', answer: 'при', full: 'пришить', hint: 'Значение: присоединение (что-то к чему-то)' },
+                { display: '_рвать', answer: 'пре', full: 'прервать', hint: 'Значение: прекращение, можно заменить на «пере-»' },
+                { display: '_лететь', answer: 'при', full: 'прилететь', hint: 'Значение: приближение, прилёт' },
+                { display: '_образить', answer: 'пре', full: 'преобразить', hint: 'Значение: перемена, можно заменить на «пере-»' },
+                { display: '_морский', answer: 'при', full: 'приморский', hint: 'Значение: близость к чему-то (рядом с морем)' },
+                { display: '_красный', answer: 'пре', full: 'прекрасный', hint: 'Значение: очень, высшая степень (очень красивый)' },
+                { display: '_одолеть', answer: 'пре', full: 'преодолеть', hint: 'Значение: можно заменить на «пере-» (переодолеть)' },
+                { display: '_клеить', answer: 'при', full: 'приклеить', hint: 'Значение: присоединение (что-то к чему-то)' },
+                { display: '_бывать', answer: 'пре', full: 'пребывать', hint: 'Значение: находиться где-то, быть в каком-то состоянии' }
+            ]
+        };
+
+        let currentRusWord = null;
+        let currentRusRule = null;
+        let rusStats = { total: 0, correct: 0 };
+
+        function rusLoadStats() {
+            const saved = localStorage.getItem('russian_trainer_stats');
+            if (saved) {
+                rusStats = JSON.parse(saved);
+                rusUpdateStatsDisplay();
+            }
+        }
+
+        function rusSaveStats() {
+            localStorage.setItem('russian_trainer_stats', JSON.stringify(rusStats));
+        }
+
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function updateRusPlaceholder() {
+            const rule = document.getElementById('rule').value;
+            const input = document.getElementById('rusLetter');
+            input.placeholder = (rule === 'prefix') ? '«пре» или «при»' : 'Одна буква';
+        }
+
+        function generateRusWord() {
+            const rule = document.getElementById('rule').value;
+
+            if (rule === 'all') {
+                const allRules = ['vowel', 'consonant', 'dictionary', 'prefix'];
+                const randomRule = getRandomItem(allRules);
+                currentRusWord = getRandomItem(rusWords[randomRule]);
+                currentRusRule = randomRule;
+            } else {
+                currentRusWord = getRandomItem(rusWords[rule]);
+                currentRusRule = rule;
+            }
+
+            const input = document.getElementById('rusLetter');
+            input.placeholder = (currentRusRule === 'prefix') ? '«пре» или «при»' : 'Одна буква';
+
+            document.getElementById('rusWordText').textContent = currentRusWord.display;
+            document.getElementById('rusHintText').textContent = currentRusWord.hint;
+            document.getElementById('rusWordSection').style.display = 'block';
+            input.value = '';
+            input.focus();
+            document.getElementById('rusFeedback').style.display = 'none';
+            document.getElementById('rusNextBtn').style.display = 'none';
+            document.getElementById('rusErrorMsg').style.display = 'none';
+            input.disabled = false;
+        }
+
+        function checkRusLetter() {
+            const userInput = document.getElementById('rusLetter').value.trim().toLowerCase();
+            const errorMsg = document.getElementById('rusErrorMsg');
+            const feedback = document.getElementById('rusFeedback');
+            const russianLetters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+
+            const isPrefixRule = currentRusRule === 'prefix';
+            let isValid = false;
+
+            if (isPrefixRule) {
+                isValid = (userInput === 'пре' || userInput === 'при');
+            } else {
+                isValid = (userInput.length === 1 && russianLetters.includes(userInput));
+            }
+
+            if (!isValid) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = isPrefixRule 
+                    ? 'Введи «пре» или «при»!' 
+                    : 'Введи одну букву русского алфавита!';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+            rusStats.total++;
+
+            const correctAnswer = currentRusWord.answer.toLowerCase();
+
+            if (userInput === correctAnswer) {
+                rusStats.correct++;
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `✅ Правильно! Слово: <b>${currentRusWord.full}</b>`;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `❌ Неправильно. Правильный ответ: <b>${currentRusWord.answer}</b><br>Слово: <b>${currentRusWord.full}</b><div class="explanation">${currentRusWord.hint}</div>`;
+            }
+
+            feedback.style.display = 'block';
+            document.getElementById('rusNextBtn').style.display = 'block';
+            document.getElementById('rusLetter').disabled = true;
+            
+            rusSaveStats();
+            rusUpdateStatsDisplay();
+        }
+
+        function rusUpdateStatsDisplay() {
+            document.getElementById('rusTotalSolved').textContent = rusStats.total;
+            document.getElementById('rusCorrectCount').textContent = rusStats.correct;
+            const accuracy = rusStats.total > 0 ? Math.round((rusStats.correct / rusStats.total) * 100) : 0;
+            document.getElementById('rusAccuracy').textContent = accuracy + '%';
+        }
+
+        // ===== ЗАГРУЗКА ПРИ СТАРТЕ =====
+        document.addEventListener('DOMContentLoaded', () => {
+            searchFormulas();
+            mathLoadStats();
+            rusLoadStats();
+        });
+    </script>
+</body>
+</html>
